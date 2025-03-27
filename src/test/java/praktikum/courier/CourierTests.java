@@ -4,13 +4,15 @@ import io.restassured.response.ValidatableResponse;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import com.github.javafaker.Faker;
 
 public class CourierTests {
     private final CourierClient courierClient = new CourierClient();
+    private final Faker faker = new Faker();
 
     @Test
     public void createCourierTest() {
-        Courier courier = Courier.random();
+        Courier courier = new Courier(faker.name().username(), faker.internet().password(), faker.name().fullName());
         ValidatableResponse response = courierClient.createCourier(courier);
         response.statusCode(201);
         assertTrue(response.extract().path("ok"));
@@ -18,7 +20,7 @@ public class CourierTests {
 
     @Test
     public void createDuplicateCourierTest() {
-        Courier courier = Courier.random();
+        Courier courier = new Courier(faker.name().username(), faker.internet().password(), faker.name().fullName());
         courierClient.createCourier(courier);
         ValidatableResponse response = courierClient.createCourier(courier);
         response.statusCode(409);
@@ -34,11 +36,16 @@ public class CourierTests {
 
     @Test
     public void loginCourierTest() {
-        Credentials creds = new Credentials("Jack65073", "P@ssw0rd123");
+        String username = faker.name().username();
+        String password = faker.internet().password();
+        Courier courier = new Courier(username, password, faker.name().fullName());
+        courierClient.createCourier(courier);
+
+        Credentials creds = new Credentials(username, password);
         ValidatableResponse response = courierClient.logIn(creds);
         response.statusCode(200);
         int id = response.extract().path("id");
-        assertEquals(493791, id);
+        assertTrue(id > 0);
     }
 
     @Test
@@ -59,7 +66,7 @@ public class CourierTests {
 
     @Test
     public void createCourierWithInvalidLoginTest() {
-        Courier courier = Courier.random();
+        Courier courier = new Courier(faker.name().username(), faker.internet().password(), faker.name().fullName());
         ValidatableResponse createResponse = courierClient.createCourier(courier);
         assertTrue(createResponse.extract().path("ok"));
 
@@ -71,7 +78,7 @@ public class CourierTests {
 
     @Test
     public void deleteCourierTest() {
-        Courier courier = Courier.random();
+        Courier courier = new Courier(faker.name().username(), faker.internet().password(), faker.name().fullName());
         ValidatableResponse createResponse = courierClient.createCourier(courier);
         assertTrue(createResponse.extract().path("ok"));
 
